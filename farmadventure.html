@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小黃鴨的肚子咕嚕嚕 - 互動繪本</title>
+    <style>
+        /* 繪本風視覺設計 */
+        :root {
+            --bg-color: #f7f3e9; /* 溫暖紙張色 */
+            --book-bg: #ffffff;
+            --text-color: #4a3e3d;
+            --primary-color: #f1c40f; /* 鴨子黃 */
+            --success-color: #2ecc71; /* 幫助的綠色 */
+            --danger-color: #e74c3c; /* 拒絕的紅色 */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft JhengHei";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 繪本外框 */
+        .book-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--book-bg);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(139, 119, 101, 0.15);
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            border: 4px solid #e1d8c7;
+            position: relative;
+        }
+
+        /* 頂部狀態欄 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #e1d8c7;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* 角色與場景 Icon 風格 */
+        .scene-icon {
+            font-size: 5rem;
+            margin: 20px 0;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .food-received {
+            font-size: 2.5rem;
+            margin: 10px 0;
+            animation: bounce 0.5s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        /* 故事文字 */
+        .story-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 70px;
+        }
+
+        /* 按鈕風格 */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-main { background-color: var(--primary-color); color: #333; }
+        .btn-help { background-color: var(--success-color); color: white; }
+        .btn-ignore { background-color: #bdc3c7; color: #555; }
+        .btn-restart { background-color: #34495e; color: white; }
+
+        /* 場景切換效果 */
+        .scene {
+            display: none;
+        }
+        .scene.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="book-container">
+    <div class="status-bar" id="statusBar" style="display: none;">
+        <span>主角：🐥 小黃鴨</span>
+        <span id="fullnessDisplay">飽食度：🥣 餓扁了</span>
+    </div>
+
+    <div id="scene-start" class="scene active">
+        <span class="scene-icon">🐥</span>
+        <h2>小黃鴨的肚子咕嚕嚕</h2>
+        <p class="story-text">一隻小黃鴨在早晨醒來，肚子發出了「咕嚕嚕」的叫聲。他決定出門找點東西吃，一場尋找食物的冒險開始了！</p>
+        <div class="btn-container">
+            <button class="btn-main" onclick="changeScene('pond')">出發找食物！</button>
+        </div>
+    </div>
+
+    <div id="scene-pond" class="scene">
+        <span class="scene-icon">🐢</span>
+        <h2>第一站：青青池塘</h2>
+        <p class="story-text">小黃鴨來到池塘邊，看到一隻小烏龜四腳朝天，在地上拼命揮動著手腳，似乎翻不過身來...</p>
+        <div class="btn-container">
+            <button class="btn-help" onclick="makeChoice(true, '🪱 小肉蟲', 'pasture')">🤝 幫忙推一把</button>
+            <button class="btn-ignore" onclick="makeChoice(false, '', 'pasture')">😢 肚子太餓了，繼續走</button>
+        </div>
+    </div>
+
+    <div id="scene-pasture" class="scene">
+        <span class="scene-icon">🐄</span>
+        <h2>第二站：快樂牧場</h2>
+        <p class="story-text">走著走著來到了牧場，乳牛媽媽急著去照顧小牛，但她辛苦採集的牧草堆散落了一地...</p>
+        <div class="btn-container">
+            <button class="btn-help" onclick="makeChoice(true, '🥛 新鮮牛奶', 'house')">🤝 幫忙撿草堆</button>
+            <button class="btn-ignore" onclick="makeChoice(false, '', 'house')">🥱 沒力氣了，搖頭走開</button>
+        </div>
+    </div>
+
+    <div id="scene-house" class="scene">
+        <span class="scene-icon">👨‍🌾</span>
+        <h2>第三站：紅磚農舍</h2>
+        <p class="story-text">最後來到一間房子前，農場主人的草帽被風吹到了高高的樹枝上，他正急得不知所措...</p>
+        <div class="btn-container">
+            <button class="btn-help" onclick="makeChoice(true, '🌽 美味玉米', 'ending')">🤝 拍拍翅膀幫忙拿</button>
+            <button class="btn-ignore" onclick="makeChoice(false, '', 'ending')">🚶 肚子空空，不想動</button>
+        </div>
+    </div>
+
+    <div id="scene-ending" class="scene">
+        <span class="scene-icon" id="endingIcon">🐥</span>
+        <h2 id="endingTitle">結算時間</h2>
+        <div id="foodList" style="margin: 15px 0; font-weight: bold;"></div>
+        <p class="story-text" id="endingText">結算中...</p>
+        <div class="btn-container">
+            <button class="btn-restart" onclick="restartGame()">再玩一次 🔄</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 遊戲狀態變數
+    let score = 0;
+    let foods = [];
+
+    // 切換場景功能
+    function changeScene(sceneId) {
+        // 隱藏所有場景
+        document.querySelectorAll('.scene').forEach(scene => {
+            scene.classList.remove('active');
+        });
+        
+        // 顯示目標場景
+        document.getElementById(`scene-${sceneId}`).classList.add('active');
+
+        // 控制頂部狀態欄顯示
+        const statusBar = document.getElementById('statusBar');
+        if (sceneId === 'start') {
+            statusBar.style.display = 'none';
+        } else {
+            statusBar.style.display = 'flex';
+        }
+
+        // 如果是結局，觸發結算邏輯
+        if (sceneId === 'ending') {
+            calculateEnding();
+        }
+    }
+
+    // 玩家做出選擇
+    function makeChoice(isHelp, foodName, nextScene) {
+        if (isHelp) {
+            score++;
+            foods.push(foodName);
+            updateFullnessDisplay();
+            
+            // 彈窗提示獲得食物（增加互動感）
+            alert(`你幫助了他人！獲得了：${foodName}！小黃鴨嗷嗚一口吃掉了。`);
+        }
+        changeScene(nextScene);
+    }
+
+    // 更新飽食度文字
+    function updateFullnessDisplay() {
+        const display = document.getElementById('fullnessDisplay');
+        if (score === 0) display.innerHTML = "飽食度：🥣 餓扁了";
+        if (score === 1) display.innerHTML = "飽食度：🥖 三分飽";
+        if (score === 2) display.innerHTML = "飽食度：🥞 六分飽";
+        if (score === 3) display.innerHTML = "飽食度：🍗 超級飽";
+    }
+
+    // 結算結局
+    function calculateEnding() {
+        const icon = document.getElementById('endingIcon');
+        const title = document.getElementById('endingTitle');
+        const text = document.getElementById('endingText');
+        const foodListDiv = document.getElementById('foodList');
+
+        // 顯示吃到的食物清單
+        if (foods.length > 0) {
+            foodListDiv.innerHTML = `冒險中吃到了：<br><span class="food-received">${foods.join('、')}</span>`;
+        } else {
+            foodListDiv.innerHTML = "空空如也...什麼都沒吃到 😢";
+        }
+
+        // 根據得分給出不同結局
+        if (score === 3) {
+            icon.innerText = "👑🦆✨";
+            title.innerText = "撐死啦！快樂的傳奇鴨！";
+            text.innerText = "小黃鴨把一路上得到的食物全部吃光光了！現在肚子圓滾滾的，躺在草地上拍著翅膀，成為了世界上最幸福、最熱心助人的小鴨鴨！";
+        } else if (score === 2) {
+            icon.innerText = "🥰🦆";
+            title.innerText = "飽飽的！滿足的小鴨！";
+            text.innerText = "小黃鴨吃到了兩樣好吃的食物，摸摸肚子覺得剛剛好！雖然還有一點點空間裝甜點，但已經充滿活力，可以開心地游回池塘囉！";
+        } else if (score === 1) {
+            icon.innerText = "🙃🐤";
+            title.innerText = "勉強塞個牙縫...還是有點餓";
+            text.innerText = "只吃到了一種食物，雖然肚子沒有一開始那麼痛了，但走起路來還是有點輕飄飄的。小黃鴨心想：『早知道剛剛就多幫一點忙了...』";
+        } else {
+            icon.innerText = "👻👻👻";
+            title.innerText = "餓到變成了傳說中的幽靈鴨";
+            text.innerText = "小黃鴨誰也沒有幫，什麼食物都沒拿到...最後牠餓得肚子咕嚕嚕直叫，只能眼巴巴地看著別人的晚餐。真是悲傷的一天！";
+        }
+    }
+
+    // 重新開始遊戲
+    function restartGame() {
+        score = 0;
+        foods = [];
+        updateFullnessDisplay();
+        changeScene('start');
+    }
+</script>
+
+</body>
+</html>
